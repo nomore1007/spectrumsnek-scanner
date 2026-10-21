@@ -19,6 +19,12 @@ from rtlsdr import RtlSdr
 import numpy as np
 from scipy import signal
 
+# Coordinate ownership with other SpectrumSnek features using the same SDR.
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+from sdr_manager import SDRManager
+
 # Try to import audio libraries
 try:
     import sounddevice as sd
@@ -168,6 +174,8 @@ class TraditionalScanner:
 
     def __init__(self):
         self.sdr = None
+        self.sdr_manager = SDRManager()
+        self.sdr_lease = None
         self.current_bank: Optional[FrequencyBank] = None
         self.current_freq_idx = 0
         self.is_scanning = False
@@ -185,11 +193,21 @@ class TraditionalScanner:
     def initialize_device(self):
         """Initialize RTL-SDR device."""
         try:
+            self.sdr_lease = self.sdr_manager.acquire_device("radio_scanner")
             self.sdr = RtlSdr()
             self.sdr.sample_rate = self.sample_rate
             self.sdr.gain = self.gain
             logger.info(f"RTL-SDR initialized: {self.sample_rate/1e6} MHz SR, Gain: {self.gain}")
         except Exception as e:
+            if self.sdr is not None:
+                try:
+                    self.sdr.close()
+                except Exception:
+                    pass
+                self.sdr = None
+            if self.sdr_lease is not None:
+                self.sdr_manager.release_device()
+                self.sdr_lease = None
             logger.error(f"Failed to initialize RTL-SDR: {e}")
             raise
 
@@ -314,7 +332,12 @@ def main():
         else:
             scanner.run_terminal_interface()
     finally:
-        if scanner.sdr: scanner.sdr.close()
+        if scanner.sdr:
+            scanner.sdr.close()
+            scanner.sdr = None
+        if scanner.sdr_lease is not None:
+            scanner.sdr_manager.release_device()
+            scanner.sdr_lease = None
         if scanner.audio_stream: 
             scanner.audio_stream.stop()
             scanner.audio_stream.close()
