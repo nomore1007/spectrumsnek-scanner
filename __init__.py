@@ -12,5 +12,5 @@ def get_module_info():
     return MODULE_INFO
 
 def run():
-    from .scanner import TraditionalScanner
-    TraditionalScanner().run()
+    from .scanner import main
+    main()
