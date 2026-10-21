@@ -1,22 +1,24 @@
 # SpectrumSnek Traditional Radio Scanner Plugin
 
-Standalone addon repository for the SpectrumSnek plugin manager.
+Standalone addon for the current SpectrumSnek plugin menu.
 
-## Install
+## Install and launch
 
-From the SpectrumSnek root directory:
+Install through **Utilities → Installed Plugins**, or from the SpectrumSnek root:
 
 ```bash
-./plugin_manager.sh install-url https://github.com/nomore1007/spectrumsnek-scanner
+./plugin_manager.sh install radio_scanner
 ```
 
-Launch from Utilities → Installed Plugins. The addon scans XML frequency banks in its `banks/` directory. Audio output is optional and requires a working audio device.
+The plugin is installed as `plugins/radio_scanner`. The menu discovers its `__init__.py` plugin contract (`MODULE_INFO`, `get_module_info()`, and no-argument `run()`) and launches it from the Installed Plugins menu.
+
+Frequency banks are loaded from the addon's own `banks/` directory, independent of the current working directory. The frequency-bank editor is available as `freq_editor.py` and uses the same addon-relative bank directory by default.
 
 ## Features
 
-- User-editable XML frequency banks
+- XML frequency banks
 - AM/FM demodulation and squelch support
 - Sequential frequency scanning
-- Optional audio output via SoundDevice
+- Optional audio output through SoundDevice
 
-Hardware-dependent scanning must be tested with an RTL-SDR receiver attached.
+An RTL-SDR compatible receiver is required for live operation. Hardware-backed scanning and audio output must be tested on the target device.
